@@ -1,5 +1,5 @@
 <template>
-  <div class="login">
+  <div class="register">
     <form class="login-form">
       <div class="flex-row">
         <label class="lf--label" for="username">
@@ -25,42 +25,35 @@
           v-model="password"
         />
       </div>
-      <b-button class="lf--submit" @click="doLogin">LOGIN</b-button>
-      <b-button variant="link" @click="toRegister">Register</b-button>
+      <b-button class="lf--submit" @click="doRegister">REGISTER</b-button>
     </form>
   </div>
 </template>
 <script>
-import { login } from "@/apis.js";
+import { register } from "@/apis.js";
 export default {
-  name: "login",
+  name: "register",
   data() {
     return {
-        username: null,
-        password: null
+      username: null,
+      password: null,
     };
   },
   methods: {
-    doLogin() {
-      login({
+    doRegister() {
+      register({
         username: this.username,
         password: this.password,
       })
         .then((response) => {
-          this.$store.commit('set', ['userId', response.data.user_id])
-          this.$router.push({ path: '/imageWall' })
+          if (!response.data.error) {
+            this.$router.push({ path: "/login" });
+          }
         })
         .catch((error) => {
           console.log(error);
         });
     },
-    toRegister() {
-        this.$router.push({ path: '/register' })
-    }
-  },
-  mounted() {
-    // this.doLogin();
-    
   },
 };
 </script>
