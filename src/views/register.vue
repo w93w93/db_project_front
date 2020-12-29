@@ -48,6 +48,12 @@ export default {
         .then((response) => {
           if (!response.data.error) {
             this.$router.push({ path: "/login" });
+          } else {
+            this.$swal.fire({
+              title: "帳號重復!",
+              icon: "error",
+              confirmButtonColor: "#FF4C3F",
+            });
           }
         })
         .catch((error) => {
