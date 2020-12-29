@@ -1,0 +1,46 @@
+.test {
+    .Item {
+        overflow: hidden;
+        border-radius: 4px;
+        width: 100%;
+        background: #F5F5F5;
+    }
+
+    .Content {
+        padding: 20px;
+    }
+
+    img {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+        line-height: 0;
+        display: block;
+    }
+
+    .searchBar {
+        padding: 30px;
+
+        input {
+            border-radius: 5em;
+        }
+
+        .has-search {
+            padding-left: 2.375rem;
+        }
+
+        .icon {
+            position: absolute;
+            z-index: 2;
+            display: block;
+            width: 1.5rem;
+            height: 2.5rem;
+            text-align: center;
+            pointer-events: none;
+            color: #aaa;
+            padding-left: 0.5rem;
+        }
+
+
+    }
+}
