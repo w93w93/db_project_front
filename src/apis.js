@@ -4,4 +4,4 @@ const API = axios.create({
     baseURL: 'http://localhost:3001'
 })
 
-export const getImages = () => API.get(`/api/images`);
+export const getImage = () => API.get(`/api/images`);
