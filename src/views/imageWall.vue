@@ -9,7 +9,6 @@
             placeholder="Search"
             type="search"
             class="has-search"
-            @blur="search"
           ></b-form-input>
         </div>
       </div>
@@ -80,6 +79,26 @@ export default {
       ],
     };
   },
+  watch: {
+    searchText(val) {
+      this.items = [];
+      search({
+        userId: this.$store.state.userId,
+        content: val,
+      })
+        .then((response) => {
+          for (let i of response.data) {
+            this.items.push({
+              id: i.id,
+              image: `http://localhost:3001${i.url}`,
+            });
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+  },
   methods: {
     append() {
       for (let i = 0; i < 20; i++) {
@@ -110,25 +129,7 @@ export default {
         .catch((error) => {
           console.log(error);
         });
-    },
-    search() {
-      this.items = [];
-      search({
-        userId: this.$store.state.userId,
-        content: this.searchText,
-      })
-        .then((response) => {
-          for (let i of response.data) {
-            this.items.push({
-              id: i.id,
-              image: `http://localhost:3001${i.url}`,
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    },
+    }
   },
   mounted() {
     this.getImage();
