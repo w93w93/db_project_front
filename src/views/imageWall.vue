@@ -23,7 +23,7 @@
     <h4 v-if="items.length == 0">no images</h4>
     <vue-masonry-wall :items="items" :options="options" v-else>
       <template v-slot:default="{ item }">
-        <div class="Item">
+        <div class="Item" @click="showImageInfo(item.id, item.image)">
           <img :src="item.image" />
 
           <!-- <div class="Content">
@@ -33,16 +33,96 @@
         </div>
       </template>
     </vue-masonry-wall>
+    <b-modal
+      id="imageInfo"
+      ref="imageInfo"
+      size="lg"
+      title=""
+      v-model="modalShow"
+      hide-header
+      hide-footer
+      hide-header-close
+      centered
+    >
+      <div class="row">
+        <div class="col imgInfo">
+          <img :src="img_url" />
+          <div class="info">
+            <span>上傳者: {{ uploader }}</span>
+            <div class="icons">
+              <span @click="clickLiked"
+                ><b-icon icon="hand-thumbs-up" :class="likeClass"></b-icon>
+                {{ like_count }}</span
+              >
+              <span @click="clickHeart"
+                ><b-icon :icon="heartIcon"></b-icon> {{ favoriteText }}</span
+              >
+            </div>
+          </div>
+          <span>評分: {{ rating }}</span>
+        </div>
+        <div class="col imgComment">
+          <h4>評論</h4>
+          <h5 v-if="commentItems.length == 0">無評論</h5>
+          <div v-else class="comment">
+            <b-list-group>
+              <b-list-group-item v-for="(v, i) in commentItems" :key="i">
+                <h6 class="commentUser">{{ v.user }}</h6>
+                <p>{{ v.content }}</p>
+              </b-list-group-item>
+            </b-list-group>
+          </div>
+          <div class="postComment">
+            <b-form-rating
+              v-model="rateValue"
+              variant="warning"
+              class="mb-2"
+            ></b-form-rating>
+            <b-form-textarea
+              id="textarea-default"
+              v-model="commentText"
+              placeholder="寫下你的感想吧"
+              rows="2"
+              max-rows="3"
+            ></b-form-textarea>
+            <b-button variant="outline-primary" size="sm" @click="submit"
+              >送出</b-button
+            >
+          </div>
+        </div>
+      </div>
+    </b-modal>
   </div>
 </template>
 <script>
 import VueMasonryWall from "vue-masonry-wall";
-import { getImages, search } from "@/apis.js";
+import {
+  getImages,
+  search,
+  imgInfo,
+  changeFavorite,
+  changeLike,
+  rate,
+  comment,
+} from "@/apis.js";
 export default {
   name: "imageWall",
   components: { VueMasonryWall },
   data() {
     return {
+      is_liked: false,
+      likeClass: "unlike",
+      is_favorite: false,
+      imgId: null,
+      favoriteText: "收藏",
+      rateValue: 0,
+      commentText: null,
+      rating: 0,
+      heartIcon: "heart",
+      like_count: null,
+      uploader: null,
+      img_url: null,
+      modalShow: false,
       searchText: null,
       options: {
         width: 300,
@@ -51,6 +131,7 @@ export default {
           default: 12,
         },
       },
+      commentItems: [],
       items: [
         // {
         //   title: "Sed non ante non cras amet",
@@ -98,6 +179,22 @@ export default {
           console.log(error);
         });
     },
+    is_favorite(val) {
+      if (val) {
+        this.heartIcon = "heart-fill";
+        this.favoriteText = "已收藏";
+      } else {
+        this.heartIcon = "heart";
+        this.favoriteText = "收藏";
+      }
+    },
+    is_liked(val) {
+      if (val) {
+        this.likeClass = "like";
+      } else {
+        this.likeClass = "unlike";
+      }
+    },
   },
   methods: {
     append() {
@@ -129,7 +226,150 @@ export default {
         .catch((error) => {
           console.log(error);
         });
-    }
+    },
+    showImageInfo(img_id, url) {
+      this.imgId = img_id;
+      imgInfo({
+        imgId: img_id,
+        userId: this.$store.state.userId,
+      })
+        .then((response) => {
+          this.commentItems = [];
+          this.rateValue = 0;
+          this.uploader = response.data.img.uploader.username;
+          this.like_count = response.data.like_count;
+          this.rating =
+            response.data.rating != null ? response.data.rating.toFixed(1) : 0;
+          this.is_favorite = response.data.is_favorite;
+          this.is_liked = response.data.liked;
+          // if (response.data.is_favorite) {
+          //   this.heartIcon = "heart-fill";
+          //   this.favoriteText = "已收藏";
+          // }else{
+          //   this.heartIcon = "heart";
+          //   this.favoriteText = "收藏";
+          // }
+          for (let i of response.data.comment) {
+            this.commentItems.push({
+              content: i.content,
+              user: i.username,
+            });
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      this.img_url = url;
+      this.modalShow = true;
+    },
+    clickHeart() {
+      let favorite = 0;
+      if (this.is_favorite) {
+        favorite = 0;
+        this.is_favorite = false;
+      } else {
+        favorite = 1;
+        this.is_favorite = true;
+      }
+      changeFavorite({
+        userId: this.$store.state.userId,
+        imgId: this.imgId,
+        on: favorite,
+      })
+        .then(() => {})
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+    clickLiked() {
+      let liked = 0;
+      if (this.is_liked) {
+        liked = 0;
+        this.is_liked = false;
+      } else {
+        liked = 1;
+        this.is_liked = true;
+      }
+
+      changeLike({
+        userId: this.$store.state.userId,
+        imgId: this.imgId,
+        on: liked,
+      })
+        .then(() => {
+          imgInfo({
+            imgId: this.imgId,
+            userId: this.$store.state.userId,
+          })
+            .then((response) => {
+              this.like_count = response.data.like_count;
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+    submit() {
+      if (this.rateValue != 0) {
+        rate({
+          userId: this.$store.state.userId,
+          imgId: this.imgId,
+          rate: this.rateValue,
+        })
+          .then(() => {
+            imgInfo({
+              imgId: this.imgId,
+              userId: this.$store.state.userId,
+            })
+              .then((response) => {
+                this.rateValue = 0;
+                this.rating =
+                  response.data.rating != null
+                    ? response.data.rating.toFixed(1)
+                    : 0;
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+
+      if (this.commentText) {
+        comment({
+          userId: this.$store.state.userId,
+          imgId: this.imgId,
+          content: this.commentText,
+        })
+          .then(() => {
+            imgInfo({
+              imgId: this.imgId,
+              userId: this.$store.state.userId,
+            })
+              .then((response) => {
+                this.commentItems = [];
+                this.commentText = null;
+                for (let i of response.data.comment) {
+                  this.commentItems.push({
+                    content: i.content,
+                    user: i.username,
+                  });
+                }
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+    },
   },
   mounted() {
     this.getImage();

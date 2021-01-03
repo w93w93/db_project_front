@@ -47,9 +47,73 @@
     .button {
         padding: 1.8em;
     }
+
+
 }
 
-.login, .register {
+.modal-content {
+    height: 80vh;
+    .modal-body {
+        .imgInfo {
+            display: flex;
+            flex-direction: column;
+    
+            img {
+                width: 100%;
+                height: auto;
+                border: 5px dotted rgba(119, 119, 119, 0.774);
+            }
+    
+            .info {
+                margin-top: 1em;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+    
+                .icons {
+                    display: flex;
+                    align-items: center;
+                    width: 8vw;
+                    justify-content: space-around;
+
+                    .unlike {
+                        color: gray;
+                    }
+
+                    .like {
+                        color: blue;
+                    }
+                }
+            }
+        }
+
+        .imgComment {
+            max-height: 74vh;
+
+            .comment {
+                max-height: 65%;
+                overflow: auto;
+                .commentUser {
+                    text-decoration: underline;
+                }
+            }
+
+            .postComment {
+                margin-top: 1em;
+                display: flex;
+                flex-direction: column;
+                .btn {
+                    margin-top: 1em;
+                }
+            }
+        }
+    }
+}
+
+
+
+.login,
+.register {
     $left-color: #242e4d;
     $right-color: #897e79;
     $green-dark: #35c3c1;
