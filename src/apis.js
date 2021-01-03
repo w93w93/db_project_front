@@ -13,3 +13,4 @@ export const changeFavorite = data => API.get(`/api/favorite?user_id=${data.user
 export const changeLike = data => API.get(`/api/like?user_id=${data.userId}&img_id=${data.imgId}&on=${data.on}`);
 export const rate = data => API.get(`/api/rate?user_id=${data.userId}&img_id=${data.imgId}&rate=${data.rate}`);
 export const comment = data => API.get(`/api/comment?user_id=${data.userId}&img_id=${data.imgId}&content=${data.content}`);
+export const getTags = () => API.get(`/api/get_tag`);
