@@ -13,11 +13,28 @@
         </div>
       </div>
       <div class="col-2">
-        <div class="button">
-          <b-button variant="outline-danger" pill @click="logout"
-            ><b-icon icon="power"></b-icon> Logout</b-button
-          >
-        </div>
+        <b-dropdown
+          size="lg"
+          variant="link"
+          toggle-class="text-decoration-none"
+          no-caret
+          right
+        >
+          <template #button-content>
+            <b-icon
+              icon="person-circle"
+              font-scale="3"
+              variant="secondary"
+            ></b-icon>
+          </template>
+          <b-dropdown-item href="#">
+            <span>Profile</span>
+          </b-dropdown-item>
+          <b-dropdown-divider></b-dropdown-divider>
+          <b-dropdown-item @click="logout">
+            <span style="color: red;"><b-icon icon="power"></b-icon> Logout</span>
+          </b-dropdown-item>
+        </b-dropdown>
       </div>
     </div>
     <h4 v-if="items.length == 0">no images</h4>
@@ -44,6 +61,10 @@
       hide-header-close
       centered
     >
+      <!-- <div class="tagSelect">
+        <b-form-select v-model="saveTag" :options="tagsList"></b-form-select>
+      </div> -->
+
       <div class="row">
         <div class="col imgInfo">
           <img :src="img_url" />
@@ -104,12 +125,26 @@ import {
   changeLike,
   rate,
   comment,
+  getTags,
 } from "@/apis.js";
 export default {
   name: "imageWall",
   components: { VueMasonryWall },
   data() {
     return {
+      Options: [
+        "Apple",
+        "Orange",
+        "Banana",
+        "Lime",
+        "Peach",
+        "Chocolate",
+        "Strawberry",
+      ],
+      search: "",
+      value: [],
+      saveTag: null,
+      tagsList: [],
       is_liked: false,
       likeClass: "unlike",
       is_favorite: false,
@@ -132,32 +167,7 @@ export default {
         },
       },
       commentItems: [],
-      items: [
-        // {
-        //   title: "Sed non ante non cras amet",
-        //   content:
-        //     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas non sagittis leo. Vestibulum sit amet metus nec neque dignissim dapibus.",
-        //   image: "https://picsum.photos/id/1015/600/600",
-        // },
-        // {
-        //   title: "Curabitur sit amet nunc",
-        //   content:
-        //     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec id mollis erat. Aliquam erat volutpat. Nunc erat lacus, rhoncus nec.",
-        //   image: "https://picsum.photos/id/1019/600/700",
-        // },
-        // {
-        //   title: "Proin pharetra, ante metus",
-        //   content:
-        //     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi ac diam ac ex efficitur posuere. Pellentesque cursus pellentesque risus, non.",
-        //   image: "https://picsum.photos/id/1039/600/800",
-        // },
-        // {
-        //   title: "Cras pharetra non enim a",
-        //   content:
-        //     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi malesuada varius nibh, a malesuada nisi feugiat eget. Aenean convallis semper.",
-        //   image: "https://picsum.photos/id/1042/600/300",
-        // },
-      ],
+      items: [],
     };
   },
   watch: {
@@ -227,6 +237,21 @@ export default {
           console.log(error);
         });
     },
+    getTag() {
+      getTags()
+        .then((response) => {
+          this.tagsList = [];
+          for (let i of response.data) {
+            this.tagsList.push({
+              value: i.id,
+              text: i.tag,
+            });
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
     showImageInfo(img_id, url) {
       this.imgId = img_id;
       imgInfo({
@@ -281,7 +306,7 @@ export default {
           console.log(error);
         });
     },
-    clickLiked() {
+    async clickLiked() {
       let liked = 0;
       if (this.is_liked) {
         liked = 0;
@@ -291,49 +316,49 @@ export default {
         this.is_liked = true;
       }
 
-      changeLike({
+      await changeLike({
         userId: this.$store.state.userId,
         imgId: this.imgId,
         on: liked,
       })
-        .then(() => {
-          imgInfo({
-            imgId: this.imgId,
-            userId: this.$store.state.userId,
-          })
-            .then((response) => {
-              this.like_count = response.data.like_count;
-            })
-            .catch((error) => {
-              console.log(error);
-            });
+        .then(() => {})
+        .catch((error) => {
+          console.log(error);
+        });
+
+      imgInfo({
+        imgId: this.imgId,
+        userId: this.$store.state.userId,
+      })
+        .then((response) => {
+          this.like_count = response.data.like_count;
         })
         .catch((error) => {
           console.log(error);
         });
     },
-    submit() {
+    async submit() {
       if (this.rateValue != 0) {
-        rate({
+        await rate({
           userId: this.$store.state.userId,
           imgId: this.imgId,
           rate: this.rateValue,
         })
-          .then(() => {
-            imgInfo({
-              imgId: this.imgId,
-              userId: this.$store.state.userId,
-            })
-              .then((response) => {
-                this.rateValue = 0;
-                this.rating =
-                  response.data.rating != null
-                    ? response.data.rating.toFixed(1)
-                    : 0;
-              })
-              .catch((error) => {
-                console.log(error);
-              });
+          .then(() => {})
+          .catch((error) => {
+            console.log(error);
+          });
+
+        imgInfo({
+          imgId: this.imgId,
+          userId: this.$store.state.userId,
+        })
+          .then((response) => {
+            this.rateValue = 0;
+            this.rating =
+              response.data.rating != null
+                ? response.data.rating.toFixed(1)
+                : 0;
           })
           .catch((error) => {
             console.log(error);
@@ -341,29 +366,29 @@ export default {
       }
 
       if (this.commentText) {
-        comment({
+        await comment({
           userId: this.$store.state.userId,
           imgId: this.imgId,
           content: this.commentText,
         })
-          .then(() => {
-            imgInfo({
-              imgId: this.imgId,
-              userId: this.$store.state.userId,
-            })
-              .then((response) => {
-                this.commentItems = [];
-                this.commentText = null;
-                for (let i of response.data.comment) {
-                  this.commentItems.push({
-                    content: i.content,
-                    user: i.username,
-                  });
-                }
-              })
-              .catch((error) => {
-                console.log(error);
+          .then(() => {})
+          .catch((error) => {
+            console.log(error);
+          });
+
+        imgInfo({
+          imgId: this.imgId,
+          userId: this.$store.state.userId,
+        })
+          .then((response) => {
+            this.commentItems = [];
+            this.commentText = null;
+            for (let i of response.data.comment) {
+              this.commentItems.push({
+                content: i.content,
+                user: i.username,
               });
+            }
           })
           .catch((error) => {
             console.log(error);
@@ -373,6 +398,7 @@ export default {
   },
   mounted() {
     this.getImage();
+    this.getTag();
     console.log(this.$store.state.userId);
   },
 };
